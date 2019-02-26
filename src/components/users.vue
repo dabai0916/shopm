@@ -43,7 +43,7 @@
       </el-table-column>
       <el-table-column prop="status" label="用户状态" width="200">
         <template slot-scope="scope">
-          <el-switch v-model="scope.row.mg_state" active-color="#13ce66" inactive-color="#ff4949"></el-switch>
+          <el-switch @change="changeState(scope.row)" v-model="scope.row.mg_state" active-color="#13ce66" inactive-color="#ff4949"></el-switch>
         </template>
       </el-table-column>
       <el-table-column prop="address" label="操作" width="300">
@@ -142,6 +142,14 @@ export default {
     this.getTableData();
   },
   methods: {
+    //修改用户状态
+    async changeState(user) {
+      const res = await this.$http.put(`users/${user.id}/state/${user.mg_state}`)
+      const {meta: {msg, status}} = res.data
+      if(status === 200) {
+        this.$message.success(msg)
+      }
+    },
     showEditBox(user) {
       this.dialogFormVisibleEdit = true;
       this.formdata = user;
