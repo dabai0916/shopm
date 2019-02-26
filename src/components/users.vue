@@ -48,7 +48,14 @@
       </el-table-column>
       <el-table-column prop="address" label="操作" width="300">
         <template slot-scope="scope">
-          <el-button type="primary" icon="el-icon-edit" circle plain size="small"></el-button>
+          <el-button
+            type="primary"
+            @click="showEditBox(scope.row)"
+            icon="el-icon-edit"
+            circle
+            plain
+            size="small"
+          ></el-button>
           <el-button
             type="danger"
             icon="el-icon-delete"
@@ -72,7 +79,7 @@
       :total="total"
     ></el-pagination>
     <!-- 添加用户对话框 -->
-    <el-dialog title="收货地址" :visible.sync="dialogFormVisibleAdd">
+    <el-dialog title="添加用户" :visible.sync="dialogFormVisibleAdd">
       <el-form label-position="left" label-width="80px" :model="formdata">
         <el-form-item label="用户名">
           <el-input v-model="formdata.username"></el-input>
@@ -92,9 +99,26 @@
         <el-button type="primary" @click="addUser()">确 定</el-button>
       </div>
     </el-dialog>
+    <!-- 编辑用户对话框 -->
+    <el-dialog title="编辑用户" :visible.sync="dialogFormVisibleEdit">
+      <el-form :model="formdata">
+        <el-form-item label="用户名" label-width="80px">
+          <el-input v-model="formdata.username" hide-required-asterisk disabled autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="邮箱" label-width="80px">
+          <el-input v-model="formdata.email" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="电话" label-width="80px">
+          <el-input v-model="formdata.mobile" autocomplete="off"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogFormVisibleEdit = false">取 消</el-button>
+        <el-button type="primary" @click="editUser()">确 定</el-button>
+      </div>
+    </el-dialog>
   </el-card>
 </template>
-
 <script>
 export default {
   data() {
@@ -105,6 +129,7 @@ export default {
       total: 15,
       list: [],
       dialogFormVisibleAdd: false,
+      dialogFormVisibleEdit: false,
       formdata: {
         username: "",
         password: "",
@@ -117,26 +142,51 @@ export default {
     this.getTableData();
   },
   methods: {
+    showEditBox(user) {
+      this.dialogFormVisibleEdit = true;
+      this.formdata = user;
+      user.email = ''
+      user.mobile = ''
+    },
+    async editUser() {
+      const res = await this.$http.put(
+        `users/${this.formdata.id}`,
+        this.formdata
+      );
+      // console.log(this.formdata);
+      const {
+        meta: { msg, status }
+      } = res.data;
+      if (status === 200) {
+        console.log("1");
+        this.dialogFormVisibleEdit = false;
+        this.getTableData();
+      }
+    },
+    //删除用户
     showDelBox(users) {
-       this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }).then(async () => {
+      this.$confirm("此操作将永久删除该文件, 是否继续?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      })
+        .then(async () => {
           //删除请求
-          const res = await this.$http.delete(`users/${users.id}`)
-          const {meta:{msg, status}} = res.data
-          if(status === 200) {
-            this.$message.success('删除成功')
-            this.pagenum = 1
-            this.getTableData()
+          const res = await this.$http.delete(`users/${users.id}`);
+          const {
+            meta: { msg, status }
+          } = res.data;
+          if (status === 200) {
+            this.$message.success("删除成功");
+            this.pagenum = 1;
+            this.getTableData();
           }
-
-        }).catch(() => {
+        })
+        .catch(() => {
           this.$message({
-            type: 'info',
-            message: '已取消删除'
-          });          
+            type: "info",
+            message: "已取消删除"
+          });
         });
     },
     async addUser() {
@@ -145,6 +195,8 @@ export default {
       this.getTableData();
     },
     addUserList() {
+      // this.formdata = ''
+      this.formdata = {}
       this.dialogFormVisibleAdd = true;
     },
     getAllUsers() {
