@@ -47,9 +47,18 @@
         </template>
       </el-table-column>
       <el-table-column prop="address" label="操作" width="300">
-        <el-button type="primary" icon="el-icon-edit" circle plain size="small"></el-button>
-        <el-button type="danger" icon="el-icon-delete" circle plain size="small"></el-button>
-        <el-button type="success" icon="el-icon-check" circle plain size="small"></el-button>
+        <template slot-scope="scope">
+          <el-button type="primary" icon="el-icon-edit" circle plain size="small"></el-button>
+          <el-button
+            type="danger"
+            icon="el-icon-delete"
+            @click="showDelBox(scope.row)"
+            circle
+            plain
+            size="small"
+          ></el-button>
+          <el-button type="success" icon="el-icon-check" circle plain size="small"></el-button>
+        </template>
       </el-table-column>
     </el-table>
     <!-- 分页 -->
@@ -108,6 +117,28 @@ export default {
     this.getTableData();
   },
   methods: {
+    showDelBox(users) {
+       this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(async () => {
+          //删除请求
+          const res = await this.$http.delete(`users/${users.id}`)
+          const {meta:{msg, status}} = res.data
+          if(status === 200) {
+            this.$message.success('删除成功')
+            this.pagenum = 1
+            this.getTableData()
+          }
+
+        }).catch(() => {
+          this.$message({
+            type: 'info',
+            message: '已取消删除'
+          });          
+        });
+    },
     async addUser() {
       const res = await this.$http.post(`users`, this.formdata);
       this.dialogFormVisibleAdd = false;
@@ -158,5 +189,11 @@ export default {
 <style>
 .searchBox {
   margin-top: 10px;
+}
+.delAlert {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 </style>
