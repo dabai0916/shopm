@@ -43,7 +43,12 @@
       </el-table-column>
       <el-table-column prop="status" label="用户状态" width="200">
         <template slot-scope="scope">
-          <el-switch @change="changeState(scope.row)" v-model="scope.row.mg_state" active-color="#13ce66" inactive-color="#ff4949"></el-switch>
+          <el-switch
+            @change="changeState(scope.row)"
+            v-model="scope.row.mg_state"
+            active-color="#13ce66"
+            inactive-color="#ff4949"
+          ></el-switch>
         </template>
       </el-table-column>
       <el-table-column prop="address" label="操作" width="300">
@@ -64,7 +69,14 @@
             plain
             size="small"
           ></el-button>
-          <el-button type="success" icon="el-icon-check" circle plain size="small"></el-button>
+          <el-button
+            @click="showDiaRole(scope.row)"
+            type="success"
+            icon="el-icon-check"
+            circle
+            plain
+            size="small"
+          ></el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -117,6 +129,27 @@
         <el-button type="primary" @click="editUser()">确 定</el-button>
       </div>
     </el-dialog>
+    <!-- 分配角色对话框 -->
+    <el-dialog title="分配角色" :visible.sync="dialogFormVisibleRole">
+      <el-form :model="formdata" label-position="left" label-width="80px">
+        <el-form-item label="用户名">{{ formdata.username }}</el-form-item>
+        <el-form-item label="角色">
+          <el-select v-model="selectVal" placeholder="请选择">
+            <el-option label="请选择" disabled :value="-1"></el-option>
+            <!-- v-for渲染 -->
+            <el-option 
+            :label="item.roleName"
+            :value="item.id"
+            v-for="(item, i) in roles" 
+            :key="item.id"></el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogFormVisibleRole = false">取 消</el-button>
+        <el-button type="primary" @click="setRole()">确 定</el-button>
+      </div>
+    </el-dialog>
   </el-card>
 </template>
 <script>
@@ -130,31 +163,65 @@ export default {
       list: [],
       dialogFormVisibleAdd: false,
       dialogFormVisibleEdit: false,
+      dialogFormVisibleRole: false,
       formdata: {
         username: "",
         password: "",
         email: "",
         mobile: ""
-      }
+      },
+      selectVal: -1,
+      roles: []
     };
   },
   created() {
     this.getTableData();
   },
   methods: {
+    //分配角色
+    async setRole() {
+      const res = await this.$http.put(`users/${this.formdata.id}/role`, {
+        rid: this.selectVal
+      })
+      const {meta: {msg, status}, data} = res.data
+      if(status === 200) {
+        this.dialogFormVisibleRole = false
+        this.$message.success(msg)
+      }
+    },
+    async showDiaRole(user) {
+      this.dialogFormVisibleRole = true;
+      this.formdata = user;
+      const res = await this.$http.get(`roles`);
+      const {
+        data,
+        meta: { msg, status }
+      } = res.data;
+      if (status === 200) {
+        this.roles = data;
+        // console.log(this.formdata.id)
+      }
+      const res2 = await this.$http.get(`users/${user.id}`)
+      // const {meta:{msg, status}, data} = res2.data
+      this.selectVal = res2.data.data.rid
+    },
     //修改用户状态
     async changeState(user) {
-      const res = await this.$http.put(`users/${user.id}/state/${user.mg_state}`)
-      const {meta: {msg, status}} = res.data
-      if(status === 200) {
-        this.$message.success(msg)
+      const res = await this.$http.put(
+        `users/${user.id}/state/${user.mg_state}`
+      );
+      const {
+        meta: { msg, status }
+      } = res.data;
+      if (status === 200) {
+        this.$message.success(msg);
       }
     },
     showEditBox(user) {
       this.dialogFormVisibleEdit = true;
       this.formdata = user;
-      user.email = ''
-      user.mobile = ''
+      user.email = "";
+      user.mobile = "";
     },
     async editUser() {
       const res = await this.$http.put(
@@ -204,7 +271,7 @@ export default {
     },
     addUserList() {
       // this.formdata = ''
-      this.formdata = {}
+      this.formdata = {};
       this.dialogFormVisibleAdd = true;
     },
     getAllUsers() {
