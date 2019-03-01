@@ -299,7 +299,7 @@ export default {
           this.pagesize
         }`
       );
-      console.log(res);
+      // console.log(res);
       const {
         data,
         meta: { msg, status }
