@@ -18,8 +18,8 @@
     <el-container>
       <el-aside width="200px" class="aside">
         <el-menu
-            :default-openeds="['1']"
-            :unique-opened="true"
+            
+            :unique-opened="false"
             :router="true"
             >
           <el-submenu index="1">
@@ -40,7 +40,7 @@
                 <el-menu-item index="2-1">
                     <i class="el-icon-menu"></i>角色列表
                 </el-menu-item>
-                <el-menu-item index="2-2">
+                <el-menu-item index="rights">
                     <i class="el-icon-menu"></i>权限列表
                 </el-menu-item>
             </el-menu-item-group>
@@ -97,6 +97,7 @@ export default {
       this.$router.push({
         name: 'login'
       })
+      this.$message.warning('请先登录')
     }
   },
   methods: {
